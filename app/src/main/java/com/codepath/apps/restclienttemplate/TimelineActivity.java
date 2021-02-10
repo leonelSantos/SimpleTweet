@@ -83,6 +83,28 @@ public class TimelineActivity extends AppCompatActivity {
 
     private void loadMoreData() {
         // 1. Send an API request to retrieve appropriate paginated data
+        client.getNextPageOfTweets(new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Headers headers, JSON json) {
+                Log.i(TAG, "onSuccess for loadMoreData!" + json.toString());
+                // 2. Deserialize and construct new model objects from the API response
+                JSONArray jsonArray = json.jsonArray;
+                try {
+                    List<Tweet> tweets = Tweet.fromJsonArray(jsonArray);
+                    // 3. Append the new data objects to the existing set of items inside the array of items
+                    // 4. Notify the adapter of the new items made with `notifyItemRangeInserted()`
+                    adapter.addAll(tweets);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                Log.i(TAG, "onFailure for loadMoreData!", throwable);
+            }
+        }, tweets.get(tweets.size() - 1).id);
+
         // 2. Deserialize and construct new model objects from the API response
         // 3. Append the new data objects to the existing set of items inside the array of items
         // 4. Notify the adapter of the new items made with `notifyItemRangeInserted()
@@ -96,12 +118,16 @@ public class TimelineActivity extends AppCompatActivity {
                JSONArray jsonArray = json.jsonArray;
 
                try {
+                   /*final List<Tweet> tweetsFromNetwork = Tweet.fromJsonArray(jsonArray);
                    adapter.clear();
-                   adapter.addAll(Tweet.fromJsonArray(jsonArray));
+                   adapter.addAll(tweetsFromNetwork);
                    // Now we call setRefreshing(false) to signal refresh has finished
-                   swipeContainer.setRefreshing(false);
+                   swipeContainer.setRefreshing(false);*/
+                   tweets.addAll(Tweet.fromJsonArray(jsonArray));
+                   adapter.notifyDataSetChanged();
                 } catch (JSONException e) {
                    Log.e(TAG, "Json exception", e);
+                   e.printStackTrace();
                 }
             }
 
